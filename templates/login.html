@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Secure Login</h2>
+            
+            {% if error %}
+                <div class="alert alert-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required placeholder="demo">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required placeholder="DemoPassword123!">
+                    
+                    <div id="strength-meter" class="strength-meter">
+                        <div class="strength-bar" id="strength-bar"></div>
+                    </div>
+                    <div id="strength-text"></div>
+                    <div id="strength-feedback" class="feedback-text"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+
+            <div class="login-info">
+                <h3>Demo Credentials</h3>
+                <p><strong>Username:</strong> demo</p>
+                <p><strong>Password:</strong> DemoPassword123!</p>
+            </div>
+
+            <div class="login-links">
+                <a href="{{ url_for('index') }}">← Back Home</a>
+                <a href="{{ url_for('phishing_demo') }}">Try Phishing Demo →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Real-time password strength checking
+    const passwordInput = document.getElementById('password');
+    const strengthBar = document.getElementById('strength-bar');
+    const strengthText = document.getElementById('strength-text');
+    const feedbackDiv = document.getElementById('strength-feedback');
+
+    passwordInput.addEventListener('input', async (e) => {
+        const password = e.target.value;
+        
+        if (!password) {
+            strengthBar.style.display = 'none';
+            strengthText.textContent = '';
+            feedbackDiv.textContent = '';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/password-strength', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+
+            const data = await response.json();
+            
+            // Update strength bar
+            strengthBar.style.display = 'block';
+            strengthBar.style.width = data.score + '%';
+            strengthBar.style.backgroundColor = data.color;
+            
+            // Update strength text
+            strengthText.textContent = `${data.strength} - Crack Time: ${data.crack_time}`;
+            strengthText.style.color = data.color;
+            
+            // Update feedback
+            feedbackDiv.innerHTML = data.feedback.map(f => `• ${f}`).join('<br>');
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+</script>
+{% endblock %}

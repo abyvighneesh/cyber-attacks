@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="phishing-container">
+        <div class="phishing-box">
+            <div class="warning-banner">
+                <strong>⚠️ PHISHING SIMULATION:</strong> This demonstrates how attackers create fake login pages.
+                Your credentials will be captured and logged, then you'll be redirected to the real login.
+            </div>
+
+            <h2>Secure Login</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">Access your account</p>
+
+            <form id="phishing-form" action="login.html" method="POST">
+                <div class="form-group">
+                    <label for="username">Email or Username:</label>
+                    <input type="text" id="username" name="username" required placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" required placeholder="user@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="remember"> Remember me
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            </form>
+
+            <div class="phishing-links">
+                <a href="#">Forgot password?</a> | <a href="#">Create account</a>
+            </div>
+
+            <div class="security-badge">
+                <p style="font-size: 12px; color: #999;">🔒 Secure Connection | © 2026</p>
+            </div>
+        </div>
+
+        <div class="phishing-analysis">
+            <h3>🎓 Educational Analysis</h3>
+            <div class="analysis-content">
+                <h4>How This Phishing Attack Works:</h4>
+                <ul>
+                    <li><strong>Visual Deception:</strong> Looks identical to legitimate login page</li>
+                    <li><strong>Credential Capture:</strong> Form fields capture everything user enters</li>
+                    <li><strong>Social Engineering:</strong> Creates urgency or appears trustworthy</li>
+                    <li><strong>Redirection:</strong> After capture, redirects to real site to avoid suspicion</li>
+                </ul>
+
+                <h4>Defense Against Phishing:</h4>
+                <ul>
+                    <li>Check URL bar carefully</li>
+                    <li>Verify SSL certificates</li>
+                    <li>Never click links in suspicious emails</li>
+                    <li>Enable MFA for critical accounts</li>
+                    <li>Security awareness training</li>
+                </ul>
+
+                <h4>What Happens Here:</h4>
+                <p>When you submit this form, your credentials will be:</p>
+                <ol>
+                    <li>Captured and logged for analysis</li>
+                    <li>Tagged as a "phishing" attack in the security log</li>
+                    <li>You'll be redirected to the real login page</li>
+                    <li>Your data will be visible in the forensics dashboard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('phishing-form');
+    
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const data = {
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        };
+
+        try {
+            const response = await fetch('/api/phishing-submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            alert('Credentials captured and logged for analysis.\nRedirecting to real login...');
+            window.location.href = result.redirectTo;
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error: ' + error);
+        }
+    });
+</script>
+
+<style>
+    .phishing-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 40px;
+        margin-bottom: 40px;
+    }
+
+    .phishing-box {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .warning-banner {
+        background: #fff3cd;
+        color: #856404;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        border-left: 4px solid #ffc107;
+    }
+
+    .phishing-analysis {
+        background: #f8f9fa;
+        padding: 30px;
+        border-radius: 8px;
+        border-left: 4px solid #0066cc;
+    }
+
+    .phishing-analysis h3 {
+        color: #0066cc;
+        margin-top: 0;
+    }
+
+    .phishing-analysis h4 {
+        color: #333;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    .phishing-analysis ul, .phishing-analysis ol {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+
+    .phishing-analysis li {
+        margin: 8px 0;
+        line-height: 1.5;
+    }
+
+    .security-badge {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+
+    @media (max-width: 768px) {
+        .phishing-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

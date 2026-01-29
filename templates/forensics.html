@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container forensics-container">
+    <div class="forensics-header">
+        <h1>🔍 Forensics & Incident Analysis</h1>
+        <p>Complete security audit logs and attack timeline</p>
+    </div>
+
+    <div class="forensics-stats">
+        <div class="stat-card">
+            <h4>Total Events</h4>
+            <div class="number">{{ logs|length }}</div>
+        </div>
+        <div class="stat-card">
+            <h4>Phishing Captures</h4>
+            <div class="number">{{ stats.phishing_count }}</div>
+        </div>
+        <div class="stat-card">
+            <h4>Attack Types</h4>
+            <div class="number">{{ stats.attack_types|length }}</div>
+        </div>
+        <div class="stat-card">
+            <h4>Defense Triggers</h4>
+            <div class="number">{{ stats.defense_triggers|length }}</div>
+        </div>
+    </div>
+
+    <div class="forensics-section">
+        <h2>Incident Timeline</h2>
+        <div class="timeline">
+            {% for log in logs[:20] %}
+            <div class="timeline-item {% if log.success %}success{% else %}attack{% endif %}">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <div class="timeline-time">{{ log.timestamp }}</div>
+                    <div class="timeline-title">
+                        {% if log.success %}
+                            ✓ <strong>Successful Login</strong>
+                        {% else %}
+                            ✗ <strong>Failed Attempt</strong>
+                        {% endif %}
+                    </div>
+                    <div class="timeline-details">
+                        <p><strong>Username:</strong> {{ log.username }}</p>
+                        <p><strong>Attack Type:</strong> 
+                            <span class="badge">{{ log.attack_type or 'Unknown' }}</span>
+                        </p>
+                        {% if log.defense_triggered %}
+                            <p><strong>Defense Triggered:</strong> 
+                                <span class="badge badge-warning">{{ log.defense_triggered }}</span>
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="forensics-section">
+        <h2>Complete Audit Log</h2>
+        <div class="logs-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Username</th>
+                        <th>Attack Type</th>
+                        <th>Result</th>
+                        <th>Defense Triggered</th>
+                        <th>Password Attempted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="{% if log.success %}success{% else %}failure{% endif %}">
+                        <td>{{ log.timestamp }}</td>
+                        <td><strong>{{ log.username }}</strong></td>
+                        <td><span class="badge badge-info">{{ log.attack_type or 'unknown' }}</span></td>
+                        <td>
+                            <span class="badge {% if log.success %}badge-success{% else %}badge-danger{% endif %}">
+                                {% if log.success %}Success{% else %}Failed{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if log.defense_triggered %}
+                                <span class="badge badge-warning">{{ log.defense_triggered }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">—</span>
+                            {% endif %}
+                        </td>
+                        <td><code class="password-code">{{ log.password_entered }}</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="forensics-section">
+        <h2>Attack Pattern Analysis</h2>
+        <div class="analysis-grid">
+            <div class="analysis-card">
+                <h3>Attack Distribution</h3>
+                <div class="attack-dist">
+                    {% for attack_type, count in stats.attack_types.items() %}
+                    <div class="dist-item">
+                        <span>{{ attack_type }}</span>
+                        <div class="dist-bar">
+                            <div class="dist-fill" style="width: {{ (count / (stats.attack_types.values()|list|max or 1) * 100)|int }}%;"></div>
+                        </div>
+                        <span>{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="analysis-card">
+                <h3>Defense Effectiveness</h3>
+                <div class="defense-eff">
+                    {% for trigger, count in stats.defense_triggers.items() %}
+                    <div class="trigger-item">
+                        <span>{{ trigger }}</span>
+                        <span class="count">{{ count }}x</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="forensics-section">
+        <h2>Incident Recommendations</h2>
+        <div class="recommendations">
+            <div class="rec-card">
+                <h4>🔐 Password Policy</h4>
+                <ul>
+                    <li>Enforce minimum 12 characters</li>
+                    <li>Require complexity (upper, lower, numbers, symbols)</li>
+                    <li>Implement password expiration</li>
+                    <li>Block common passwords</li>
+                </ul>
+            </div>
+            <div class="rec-card">
+                <h4>🛡️ Defense Mechanisms</h4>
+                <ul>
+                    <li>Enable rate limiting (max 5 attempts)</li>
+                    <li>Implement account lockout (30 min after 5 failures)</li>
+                    <li>Deploy MFA on all accounts</li>
+                    <li>Monitor for credential stuffing patterns</li>
+                </ul>
+            </div>
+            <div class="rec-card">
+                <h4>👥 User Training</h4>
+                <ul>
+                    <li>Phishing awareness training</li>
+                    <li>Password best practices</li>
+                    <li>Social engineering recognition</li>
+                    <li>Regular security updates</li>
+                </ul>
+            </div>
+            <div class="rec-card">
+                <h4>📊 Monitoring</h4>
+                <ul>
+                    <li>Real-time alert on suspicious activity</li>
+                    <li>Log aggregation and analysis</li>
+                    <li>Anomaly detection (AI/ML)</li>
+                    <li>Regular penetration testing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-link">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+</div>
+
+<style>
+    .forensics-container {
+        margin-top: 40px;
+        margin-bottom: 40px;
+    }
+
+    .forensics-header h1 {
+        margin-bottom: 5px;
+    }
+
+    .forensics-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin: 30px 0;
+    }
+
+    .forensics-section {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        margin: 30px 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .timeline {
+        margin: 20px 0;
+    }
+
+    .timeline-item {
+        display: flex;
+        margin: 20px 0;
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .timeline-marker {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        position: absolute;
+        left: 0;
+        top: 5px;
+        background: #ccc;
+    }
+
+    .timeline-item.success .timeline-marker {
+        background: #28a745;
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+    }
+
+    .timeline-item.attack .timeline-marker {
+        background: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        flex: 1;
+    }
+
+    .timeline-time {
+        font-size: 12px;
+        color: #999;
+    }
+
+    .timeline-title {
+        font-weight: bold;
+        margin: 5px 0;
+    }
+
+    .timeline-details p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+
+    .password-code {
+        background: #f0f0f0;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 12px;
+    }
+
+    .analysis-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    .attack-dist {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .dist-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dist-item > span:first-child {
+        min-width: 120px;
+        font-weight: 500;
+    }
+
+    .dist-bar {
+        flex: 1;
+        height: 20px;
+        background: #eee;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .dist-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0066cc, #0033ff);
+        transition: width 0.3s ease;
+    }
+
+    .dist-item > span:last-child {
+        min-width: 40px;
+        text-align: right;
+        font-weight: bold;
+    }
+
+    .defense-eff {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .trigger-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 4px;
+    }
+
+    .count {
+        background: #0066cc;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    .recommendations {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .rec-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+        border-left: 4px solid #0066cc;
+    }
+
+    .rec-card h4 {
+        margin-top: 0;
+        color: #0066cc;
+    }
+
+    .rec-card ul {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+
+    .rec-card li {
+        margin: 8px 0;
+        line-height: 1.5;
+    }
+
+    .back-link {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    @media (max-width: 768px) {
+        .analysis-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

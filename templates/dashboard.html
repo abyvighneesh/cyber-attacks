@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container dashboard-container">
+    <div class="dashboard-header">
+        <h1>🔐 Security Dashboard</h1>
+        <p>Real-time monitoring and attack visualization</p>
+    </div>
+
+    <div class="defense-panel">
+        <h3>🛡️ Defense Controls</h3>
+        <div class="defense-toggles">
+            <div class="toggle-item">
+                <label for="mfa-toggle">Multi-Factor Auth (MFA)</label>
+                <button class="toggle {% if defense_state.mfa_enabled %}active{% endif %}" id="mfa-toggle" data-type="mfa"></button>
+            </div>
+            <div class="toggle-item">
+                <label for="rate-toggle">Rate Limiting</label>
+                <button class="toggle {% if defense_state.rate_limiting_enabled %}active{% endif %}" id="rate-toggle" data-type="rate_limiting"></button>
+            </div>
+            <div class="toggle-item">
+                <label for="lockout-toggle">Account Lockout</label>
+                <button class="toggle {% if defense_state.account_lockout_enabled %}active{% endif %}" id="lockout-toggle" data-type="account_lockout"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Attempts</h3>
+            <div class="stat-value" id="total-attempts">0</div>
+        </div>
+        <div class="stat-card">
+            <h3>Successful Logins</h3>
+            <div class="stat-value" id="successful-logins">0</div>
+        </div>
+        <div class="stat-card">
+            <h3>Failed Attempts</h3>
+            <div class="stat-value" id="failed-attempts">0</div>
+        </div>
+        <div class="stat-card">
+            <h3>Success Rate</h3>
+            <div class="stat-value" id="success-rate">0%</div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-container">
+            <h3>Attack Distribution</h3>
+            <canvas id="attackChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Login Success Rate</h3>
+            <canvas id="successChart"></canvas>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-container">
+            <h3>Attack Types Over Time</h3>
+            <canvas id="timelineChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Defense Triggers</h3>
+            <canvas id="defenseChart"></canvas>
+        </div>
+    </div>
+
+    <div class="logs-section">
+        <h3>📋 Recent Login Attempts</h3>
+        <div class="logs-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Result</th>
+                        <th>Attack Type</th>
+                        <th>Defense</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-body">
+                    {% for log in logs %}
+                    <tr class="log-row {% if log.success %}success{% else %}failure{% endif %}">
+                        <td>{{ log.timestamp }}</td>
+                        <td>{{ log.username }}</td>
+                        <td><code>{{ log.password_entered[:10] }}...</code></td>
+                        <td><span class="badge {% if log.success %}badge-success{% else %}badge-danger{% endif %}">
+                            {% if log.success %}✓ Success{% else %}✗ Failed{% endif %}
+                        </span></td>
+                        <td><span class="badge badge-info">{{ log.attack_type or 'Unknown' }}</span></td>
+                        <td>
+                            {% if log.defense_triggered %}
+                                <span class="badge badge-warning">{{ log.defense_triggered }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="simulation-section">
+        <h3>⚔️ Attack Simulations</h3>
+        <div class="simulation-grid">
+            <div class="simulation-card">
+                <h4>🔴 Brute Force Attack</h4>
+                <p>Try passwords from wordlist against demo account</p>
+                <button class="btn btn-warning" onclick="runBruteForce()">Start Attack</button>
+                <div id="brute-force-result" class="result-box"></div>
+            </div>
+            <div class="simulation-card">
+                <h4>🎣 Dictionary Attack</h4>
+                <p>Use common password dictionary</p>
+                <button class="btn btn-warning" onclick="runDictionary()">Start Attack</button>
+                <div id="dictionary-result" class="result-box"></div>
+            </div>
+            <div class="simulation-card">
+                <h4>🚨 Credential Stuffing</h4>
+                <p>Try same password across accounts</p>
+                <button class="btn btn-warning" onclick="runCredentialStuffing()">Start Attack</button>
+                <div id="stuffing-result" class="result-box"></div>
+            </div>
+            <div class="simulation-card">
+                <h4>🔍 View Forensics</h4>
+                <p>Complete incident analysis</p>
+                <a href="{{ url_for('forensics') }}" class="btn btn-secondary">Go to Forensics</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let attackChart, successChart, timelineChart, defenseChart;
+
+    // Initialize charts
+    function initCharts() {
+        // Attack Distribution Chart
+        const attackCtx = document.getElementById('attackChart').getContext('2d');
+        attackChart = new Chart(attackCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Phishing', 'Brute Force', 'Dictionary', 'Legitimate'],
+                datasets: [{
+                    data: [0, 0, 0, 0],
+                    backgroundColor: ['#ff6b6b', '#ee5a6f', '#ffc107', '#28a745'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Success Rate Chart
+        const successCtx = document.getElementById('successChart').getContext('2d');
+        successChart = new Chart(successCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Successful', 'Failed'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['#28a745', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Timeline Chart
+        const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+        timelineChart = new Chart(timelineCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Phishing',
+                        data: [],
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Brute Force',
+                        data: [],
+                        borderColor: '#ee5a6f',
+                        backgroundColor: 'rgba(238, 90, 111, 0.1)',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Defense Triggers Chart
+        const defenseCtx = document.getElementById('defenseChart').getContext('2d');
+        defenseChart = new Chart(defenseCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Defense Triggers',
+                    data: [],
+                    backgroundColor: '#0066cc'
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    }
+
+    // Update stats and charts
+    async function updateDashboard() {
+        try {
+            const response = await fetch('/api/stats');
+            const stats = await response.json();
+
+            // Update stat cards
+            document.getElementById('total-attempts').textContent = stats.total_attempts;
+            document.getElementById('successful-logins').textContent = stats.successful_logins;
+            document.getElementById('failed-attempts').textContent = stats.failed_attempts;
+            document.getElementById('success-rate').textContent = stats.success_rate;
+
+            // Update attack chart
+            const attackLabels = Object.keys(stats.attack_types);
+            const attackData = Object.values(stats.attack_types);
+            attackChart.data.labels = attackLabels.length > 0 ? attackLabels : ['No attacks yet'];
+            attackChart.data.datasets[0].data = attackData.length > 0 ? attackData : [0];
+            attackChart.update();
+
+            // Update success chart
+            successChart.data.datasets[0].data = [stats.successful_logins, stats.failed_attempts];
+            successChart.update();
+
+            // Update defense chart
+            const defenseLabels = Object.keys(stats.defense_triggers);
+            const defenseData = Object.values(stats.defense_triggers);
+            defenseChart.data.labels = defenseLabels.length > 0 ? defenseLabels : ['No blocks yet'];
+            defenseChart.data.datasets[0].data = defenseData.length > 0 ? defenseData : [0];
+            defenseChart.update();
+        } catch (error) {
+            console.error('Error updating dashboard:', error);
+        }
+    }
+
+    // Attack simulation functions
+    async function runBruteForce() {
+        const resultDiv = document.getElementById('brute-force-result');
+        resultDiv.textContent = '⏳ Running brute-force attack...';
+
+        try {
+            const response = await fetch('/api/attack/brute-force', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target: 'demo' })
+            });
+            const result = await response.json();
+
+            let message = `
+                <strong>Brute Force Attack Results:</strong><br>
+                Attempts: ${result.attempts}<br>
+                Successful: ${result.success ? '✓ YES' : '✗ NO'}<br>
+                Blocked: ${result.blocked ? '✓ YES' : '✗ NO'}<br>
+                Defense: ${result.defense_enabled ? '🛡️ Enabled' : '⚠️ Disabled'}
+            `;
+            resultDiv.innerHTML = message;
+            setTimeout(updateDashboard, 1000);
+        } catch (error) {
+            resultDiv.textContent = '❌ Error: ' + error;
+        }
+    }
+
+    async function runDictionary() {
+        const resultDiv = document.getElementById('dictionary-result');
+        resultDiv.textContent = '⏳ Running dictionary attack...';
+
+        try {
+            const response = await fetch('/api/attack/dictionary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target: 'demo' })
+            });
+            const result = await response.json();
+
+            let message = `
+                <strong>Dictionary Attack Results:</strong><br>
+                Passwords Attempted: ${result.attempted}<br>
+                Blocked: ${result.defense_blocked ? '✓ YES' : '✗ NO'}<br>
+                Defense: ${result.defense_enabled ? '🛡️ Enabled' : '⚠️ Disabled'}
+            `;
+            resultDiv.innerHTML = message;
+            setTimeout(updateDashboard, 1000);
+        } catch (error) {
+            resultDiv.textContent = '❌ Error: ' + error;
+        }
+    }
+
+    async function runCredentialStuffing() {
+        const resultDiv = document.getElementById('stuffing-result');
+        resultDiv.textContent = '⏳ Running credential stuffing...';
+
+        try {
+            const response = await fetch('/api/attack/dictionary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target: 'demo' })
+            });
+            const result = await response.json();
+
+            let message = `
+                <strong>Credential Stuffing Results:</strong><br>
+                Accounts Targeted: ${result.attempted}<br>
+                Blocked: ${result.defense_blocked ? '✓ YES' : '✗ NO'}<br>
+                Defense: ${result.defense_enabled ? '🛡️ Enabled' : '⚠️ Disabled'}
+            `;
+            resultDiv.innerHTML = message;
+            setTimeout(updateDashboard, 1000);
+        } catch (error) {
+            resultDiv.textContent = '❌ Error: ' + error;
+        }
+    }
+
+    // Defense toggles
+    document.querySelectorAll('.toggle').forEach(toggle => {
+        toggle.addEventListener('click', async () => {
+            const type = toggle.getAttribute('data-type');
+            const enabled = !toggle.classList.contains('active');
+
+            try {
+                await fetch('/api/defense/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, enabled })
+                });
+
+                toggle.classList.toggle('active');
+            } catch (error) {
+                console.error('Error toggling defense:', error);
+            }
+        });
+    });
+
+    // Initialize on load
+    window.addEventListener('load', () => {
+        initCharts();
+        updateDashboard();
+        setInterval(updateDashboard, 10000); // Update every 10 seconds
+    });
+</script>
+{% endblock %}

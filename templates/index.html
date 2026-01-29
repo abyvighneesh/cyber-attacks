@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container hero">
+    <div class="hero-content">
+        <h1>🔐 Password Security & Attack Simulation</h1>
+        <p>An interactive educational platform demonstrating password attacks, defenses, and security analytics.</p>
+        
+        <div class="hero-buttons">
+            <a href="{{ url_for('login') }}" class="btn btn-primary">Login Demo</a>
+            <a href="{{ url_for('phishing_demo') }}" class="btn btn-warning">Phishing Demo</a>
+            <a href="#demo-flow" class="btn btn-secondary">Learn More</a>
+        </div>
+    </div>
+
+    <section id="demo-flow" class="section">
+        <h2>How It Works</h2>
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <h3>Login System</h3>
+                <p>Secure authentication with password hashing</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <h3>Phishing Attack</h3>
+                <p>Capture credentials via fake login</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <h3>Brute Force</h3>
+                <p>Attack weak passwords systematically</p>
+            </div>
+        </div>
+        <div class="flow-diagram">
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <h3>Defense</h3>
+                <p>Rate limiting, MFA, account lockout</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <h3>Logging</h3>
+                <p>Record all attempts and responses</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="step-number">6</div>
+                <h3>Analytics</h3>
+                <p>Visualize trends and incidents</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section features">
+        <h2>Key Features</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🎯 Attack Simulations</h3>
+                <ul>
+                    <li>Brute-force attacks</li>
+                    <li>Dictionary attacks</li>
+                    <li>Phishing campaigns</li>
+                    <li>Credential stuffing</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h3>🛡️ Defense Mechanisms</h3>
+                <ul>
+                    <li>Rate limiting</li>
+                    <li>Account lockout</li>
+                    <li>MFA simulation</li>
+                    <li>Password requirements</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Analytics Dashboard</h3>
+                <ul>
+                    <li>Real-time charts</li>
+                    <li>Attack distribution</li>
+                    <li>Success metrics</li>
+                    <li>Defense effectiveness</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h3>🔍 Forensics View</h3>
+                <ul>
+                    <li>Complete audit logs</li>
+                    <li>Incident timeline</li>
+                    <li>Attack patterns</li>
+                    <li>Defense triggers</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Educational Outcomes</h2>
+        <div class="outcomes">
+            <div class="outcome">
+                <h4>🔐 Authentication Security</h4>
+                <p>Understand password hashing, salting, and secure storage</p>
+            </div>
+            <div class="outcome">
+                <h4>🎯 Attack Methodology</h4>
+                <p>Learn how attackers target systems and exploit weak passwords</p>
+            </div>
+            <div class="outcome">
+                <h4>🛡️ Defense Strategy</h4>
+                <p>Implement and evaluate security controls to prevent breaches</p>
+            </div>
+            <div class="outcome">
+                <h4>📊 Security Analytics</h4>
+                <p>Interpret data to identify threats and improve defenses</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section disclaimer">
+        <h2>Ethical & Academic Scope</h2>
+        <div class="scope-box">
+            <p><strong>✅ This project is:</strong></p>
+            <ul>
+                <li>Fully local and isolated</li>
+                <li>Non-destructive and safe</li>
+                <li>Designed for cybersecurity education</li>
+                <li>Free of real credentials or external systems</li>
+            </ul>
+            <p><strong>❌ This project does NOT:</strong></p>
+            <ul>
+                <li>Perform real password cracking</li>
+                <li>Attack external systems</li>
+                <li>Store sensitive real data</li>
+                <li>Teach illegal hacking techniques</li>
+            </ul>
+        </div>
+    </section>
+</div>
+{% endblock %}
